@@ -5,6 +5,7 @@ class Head
     @position = position
     @direction = direction
     @child = new Tail( [ @position[0], @position[1]-1 ], @)
+    @changedDirection = false
 
   step: (limits) =>
     @child.step()
@@ -16,6 +17,7 @@ class Head
 
     @position[0] = limits[0] if @position[0] < 0
     @position[1] = limits[1] if @position[1] < 0
+    @changedDirection = false
 
   render: (world) =>
     world[@position[1]][@position[0]] = ' '
@@ -114,15 +116,19 @@ stdin.on 'data', (key) ->
   if key == '\u0003'
     process.exit()
   if key == '\u001b[A'
-    unless snake.direction[1] == 1
+    unless snake.direction[1] == 1 || snake.changedDirection
+      snake.changedDirection = true
       snake.direction = [0,-1]
   if key == '\u001b[B'
-    unless snake.direction[1] == -1
+    unless snake.direction[1] == -1 || snake.changedDirection
+      snake.changedDirection = true
       snake.direction = [0,1]
   if key == '\u001b[C'
-    unless snake.direction[0] == -1
+    unless snake.direction[0] == -1 || snake.changedDirection
+      snake.changedDirection = true
       snake.direction = [1,0]
   if key == '\u001b[D'
-    unless snake.direction[0] == 1
+    unless snake.direction[0] == 1 || snake.changedDirection
+      snake.changedDirection = true
       snake.direction = [-1,0]
   #console.dir(key)
