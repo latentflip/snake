@@ -2,7 +2,7 @@ class Head
   constructor: (position, direction) ->
     @position = position
     @direction = direction
-    @child = new Tail( [ @position[0], @position[1]-1 ], @)
+    @child = new Tail( [ @position[0]-1, @position[1] ], @)
     @changedDirection = false
 
   updateDirection: (newDirection) =>
@@ -74,11 +74,13 @@ class Food
     
 
 class World
-  constructor: (size, snake, renderFunction) ->
+  constructor: (size, snake, renderFunction, onGameEnd) ->
     @size = size
     @snake = snake
     @food = new Food([ 20, 10 ])
     @renderFunction = renderFunction
+    @onGameEnd = onGameEnd || (-> )
+    @score = 0
 
   step: =>
     @snake.step([@size[0], @size[1]])
@@ -88,16 +90,20 @@ class World
     if @snake.position[0] == @food.position[0] and @snake.position[1] == @food.position[1]
       @snake.grow()
       @newRandomFood()
+      @score++
 
   newRandomFood: ->
     @food = new Food([ Math.floor(Math.random() * @size[0]),
                        Math.floor(Math.random() * @size[1]) ])
 
   render: =>
-    grid = @makeGrid()
-    grid = @food.render(grid)
-    grid = @snake.render(grid)
-    @renderFunction(grid)
+    try
+      grid = @makeGrid()
+      grid = @food.render(grid)
+      grid = @snake.render(grid)
+      @renderFunction(grid)
+    catch err
+      @onGameEnd(@score)
 
   makeGrid: ->
     grid = []

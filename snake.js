@@ -15,7 +15,7 @@
       this.updateDirection = __bind(this.updateDirection, this);
       this.position = position;
       this.direction = direction;
-      this.child = new Tail([this.position[0], this.position[1] - 1], this);
+      this.child = new Tail([this.position[0] - 1, this.position[1]], this);
       this.changedDirection = false;
     }
 
@@ -129,7 +129,7 @@
 
   World = (function() {
 
-    function World(size, snake, renderFunction) {
+    function World(size, snake, renderFunction, onGameEnd) {
       this.render = __bind(this.render, this);
 
       this.collide = __bind(this.collide, this);
@@ -139,6 +139,8 @@
       this.snake = snake;
       this.food = new Food([20, 10]);
       this.renderFunction = renderFunction;
+      this.onGameEnd = onGameEnd || (function() {});
+      this.score = 0;
     }
 
     World.prototype.step = function() {
@@ -149,7 +151,8 @@
     World.prototype.collide = function() {
       if (this.snake.position[0] === this.food.position[0] && this.snake.position[1] === this.food.position[1]) {
         this.snake.grow();
-        return this.newRandomFood();
+        this.newRandomFood();
+        return this.score++;
       }
     };
 
@@ -159,10 +162,14 @@
 
     World.prototype.render = function() {
       var grid;
-      grid = this.makeGrid();
-      grid = this.food.render(grid);
-      grid = this.snake.render(grid);
-      return this.renderFunction(grid);
+      try {
+        grid = this.makeGrid();
+        grid = this.food.render(grid);
+        grid = this.snake.render(grid);
+        return this.renderFunction(grid);
+      } catch (err) {
+        return this.onGameEnd(this.score);
+      }
     };
 
     World.prototype.makeGrid = function() {
@@ -221,10 +228,10 @@
         snake.updateDirection('down');
       }
       if (key === '\u001b[C') {
-        snake.updateDirection('left');
+        snake.updateDirection('right');
       }
       if (key === '\u001b[D') {
-        return snake.updateDirection('right');
+        return snake.updateDirection('left');
       }
     });
   }
