@@ -1,11 +1,25 @@
-colors = require 'colors'
-
 class Head
   constructor: (position, direction) ->
     @position = position
     @direction = direction
     @child = new Tail( [ @position[0], @position[1]-1 ], @)
     @changedDirection = false
+
+  updateDirection: (newDirection) =>
+    unless @changedDirection
+      if newDirection == 'up' and @direction[1] != 1
+        @changedDirection = true
+        @direction = [0, -1]
+      if newDirection == 'down' and @direction[1] != -1
+        @changedDirection = true
+        @direction = [0, 1]
+      if newDirection == 'left' and @direction[0] != 1
+        @changedDirection = true
+        @direction = [-1, 0]
+      if newDirection == 'right' and @direction[0] != -1
+        @changedDirection = true
+        @direction = [1, 0]
+
 
   step: (limits) =>
     @child.step()
@@ -55,15 +69,16 @@ class Food
     @position = position
 
   render: (world) ->
-    world[@position[1]][@position[0]] = 'x'.green
+    world[@position[1]][@position[0]] = 'x'
     world
     
 
 class World
-  constructor: (size, snake) ->
+  constructor: (size, snake, renderFunction) ->
     @size = size
     @snake = snake
     @food = new Food([ 20, 10 ])
+    @renderFunction = renderFunction
 
   step: =>
     @snake.step([@size[0], @size[1]])
@@ -79,10 +94,10 @@ class World
                        Math.floor(Math.random() * @size[1]) ])
 
   render: =>
-    grid = @makeGrid() 
+    grid = @makeGrid()
     grid = @food.render(grid)
     grid = @snake.render(grid)
-    console.log grid.map( (r) -> r.join('')).join("\n")
+    @renderFunction(grid)
 
   makeGrid: ->
     grid = []
@@ -91,44 +106,45 @@ class World
     for y in [0..height]
       do (y) ->
         row = []
-        row.push('▋'.green) for x in [0..width]
+        row.push('▋') for x in [0..width]
         grid.push(row)
     grid
 
 
-snake = new Head([10,10], [1,0])
+if typeof window != 'undefined'
+  window.Head = Head
+  window.World = World
 
 
-world = new World([20,20], snake)
-setInterval ->
-  console.log("\n\n")
-  world.step()
-  world.render()
-, 100
+if typeof module != 'undefined' && this.module != module
+  colors = require 'colors'
 
+  snake = new Head([10,10], [1,0])
 
-stdin = process.stdin
-stdin.setRawMode true
-stdin.resume()
-stdin.setEncoding 'utf8'
+  render = (grid) ->
+    console.log grid.map( (r) -> r.join('').green).join("\n")
 
-stdin.on 'data', (key) ->
-  if key == '\u0003'
-    process.exit()
-  if key == '\u001b[A'
-    unless snake.direction[1] == 1 || snake.changedDirection
-      snake.changedDirection = true
-      snake.direction = [0,-1]
-  if key == '\u001b[B'
-    unless snake.direction[1] == -1 || snake.changedDirection
-      snake.changedDirection = true
-      snake.direction = [0,1]
-  if key == '\u001b[C'
-    unless snake.direction[0] == -1 || snake.changedDirection
-      snake.changedDirection = true
-      snake.direction = [1,0]
-  if key == '\u001b[D'
-    unless snake.direction[0] == 1 || snake.changedDirection
-      snake.changedDirection = true
-      snake.direction = [-1,0]
-  #console.dir(key)
+  world = new World([20,20], snake, render)
+
+  setInterval ->
+    console.log("\n\n")
+    world.step()
+    world.render()
+  , 100
+
+  stdin = process.stdin
+  stdin.setRawMode true
+  stdin.resume()
+  stdin.setEncoding 'utf8'
+
+  stdin.on 'data', (key) ->
+    if key == '\u0003'
+      process.exit()
+    if key == '\u001b[A'
+      snake.updateDirection('up')
+    if key == '\u001b[B'
+      snake.updateDirection('down')
+    if key == '\u001b[C'
+      snake.updateDirection('right')
+    if key == '\u001b[D'
+      snake.updateDirection('left')

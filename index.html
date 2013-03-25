@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <style>
+      body { 
+        font-family: monospace;
+      }
+
+      #game div, #game span {
+        margin: 0;
+        padding: 0;
+        line-height: 10px;
+      }
+
+      #game span {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background: #A1D0B2;
+      }
+
+      #game span.snake {
+        background: #212F1C;
+      }
+    </style>
+    <meta charset="utf-8">
+    <script src='underscore-min.js'></script>
+    <script src='jquery.min.js'></script>
+    <script src='snake.js'></script>
+
+    <script>
+      $(function() {
+        render = function(grid) {
+          var output = $('<div>')
+          grid.map(function(row) {
+            var r = $('<div>')
+            row.map( function(cell) {
+              var c = $('<span>');
+              if (cell == 'x') {
+                c.addClass('food')
+                c.text('x')
+              } else if (cell == ' ') {
+                c.addClass('snake')
+              }
+              r.append(c);
+            });
+            output.append(r);
+          });
+          $('#game').empty()
+          $('#game').append(output);
+        }
+
+        snake = new Head([10,10], [1,0])
+        world = new World([20,20], snake, render)
+
+        setInterval(function() {
+          world.step()
+          world.render()
+        }, 50)
+
+        $(document).keyup(function(ev) {
+          console.log(ev.which)
+          if (ev.which == 38) snake.updateDirection('up')
+          if (ev.which == 37) snake.updateDirection('left')
+          if (ev.which == 39) snake.updateDirection('right')
+          if (ev.which == 40) snake.updateDirection('down')
+        });
+      })
+
+      var phoneState = '';
+      function handleOrientation(ev) {
+        var angle = ev.beta;
+        
+        if (angle < -45) {
+          if (phoneState != 'inverted') {
+            phoneState = 'inverted';
+            snake.updateDirection('down');
+          }
+        } else if (angle > 45) {
+          if (phoneState != 'normal') {
+            phoneState = 'normal';
+            snake.updateDirection('up');
+          }
+        } else {
+          if (phoneState != 'left') {
+            phoneState = 'left';
+            snake.updateDirection('left');
+          }
+        }
+
+        $('#orient').text( Math.floor(angle) + '')
+      }
+      window.addEventListener("deviceorientation", _.throttle(handleOrientation, 10), true);
+
+    </script>
+  </head>
+  <body>
+    <div id='game'>
+    </div>
+    <span id='orient'></span>
+  </body>
+</html>
