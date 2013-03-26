@@ -92,33 +92,43 @@
       })
 
       var phoneState = '';
-      function handleOrientation(ev) {
-        var angle = ev.beta;
-        
-        if (angle < -45) {
+      function devMotion(ev) {
+        var accel = ev.accelerationIncludingGravity;
+
+        var ud = Math.round(accel.y);
+        var lr = Math.round(accel.x);
+
+        if (ud < -6) {
           if (phoneState != 'inverted') {
             phoneState = 'inverted';
             snake.updateDirection('down');
           }
-        } else if (angle > 45) {
+        } else if (ud > 6) {
           if (phoneState != 'normal') {
             phoneState = 'normal';
             snake.updateDirection('up');
           }
-        } else {
+        } else if (lr < -6) {
           if (phoneState != 'left') {
             phoneState = 'left';
             snake.updateDirection('left');
           }
+        } else if (lr > 6) {
+          if (phoneState != 'right') {
+            phoneState = 'right';
+            snake.updateDirection('right');
+          }
         }
       }
-      window.addEventListener("deviceorientation", _.throttle(handleOrientation, 10), true);
 
+      $(function() {
+        window.addEventListener('devicemotion', devMotion, false);
+      });
     </script>
   </head>
   <body>
+    <div id='orient'>Hita</div>
     <div id='game'>
     </div>
-    <span id='orient'></span>
   </body>
 </html>
